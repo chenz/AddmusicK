@@ -5,6 +5,7 @@
 #include <utility>
 #include <initializer_list>
 #include <cstdlib>
+#include <charconv>
 #include "../SourceView.h"
 #include "../Duration.h"
 #include "../Accidental.h"
@@ -232,8 +233,12 @@ struct Hex
 	}; // "[[:xdigit:]]{N}"
 	using arg_type = unsigned;
 	std::optional<arg_type> operator()(SourceView &file) {
-		if (auto x = file.Trim(fmt))
-			return static_cast<arg_type>(std::strtol(x->data(), nullptr, 16));
+		if (auto x = file.Trim(fmt)) {
+			arg_type value;
+			if (std::from_chars(x->data(), x->data() + x->size(), value, 16).ec == std::errc{}) {
+				return value;
+			}
+		}
 		return std::nullopt;
 	}
 };

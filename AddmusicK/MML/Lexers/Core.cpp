@@ -16,31 +16,38 @@ LEXER_FUNC_START(Lexer::Int)
 //	if (file.Trim("\\$"))
 //		return Hex2()(file);
 	if (auto x = file.Trim("[[:digit:]]+")) {
-		auto ret = static_cast<arg_type>(std::strtoul(x->data(), nullptr, 10));
-		if (errno != ERANGE)
-			return ret;
+		arg_type value;
+		if (std::from_chars(x->data(), x->data() + x->size(), value, 10).ec == std::errc{}) {
+			return value;
+		}
 	}
 LEXER_FUNC_END()
 
 LEXER_FUNC_START(Lexer::HexInt)
 	if (auto x = file.Trim("[[:xdigit:]]+")) {
-		auto ret = static_cast<arg_type>(std::strtoul(x->data(), nullptr, 16));
-		if (errno != ERANGE)
-			return ret;
+		arg_type value;
+		if (std::from_chars(x->data(), x->data() + x->size(), value, 16).ec == std::errc{}) {
+			return value;
+		}
 	}
 LEXER_FUNC_END()
 
 LEXER_FUNC_START(Lexer::SInt)
 	if (auto x = file.Trim("[+-]?[[:digit:]]+")) {
-		auto ret = static_cast<arg_type>(std::strtol(x->data(), nullptr, 10));
-		if (errno != ERANGE)
-			return ret;
+		arg_type value;
+		if (std::from_chars(x->data(), x->data() + x->size(), value, 10).ec == std::errc{}) {
+			return value;
+		}
 	}
 LEXER_FUNC_END()
 
 LEXER_FUNC_START(Lexer::Byte)
-	if (auto x = file.Trim("\\$[[:xdigit:]]{2}"))
-		return static_cast<arg_type>(std::strtoul(x->data() + 1, nullptr, 16));
+	if (auto x = file.Trim("\\$[[:xdigit:]]{2}")) {
+		arg_type value;
+		if (std::from_chars(x->data() + 1, x->data() + x->size(), value, 16).ec == std::errc{}) {
+			return value;
+		}
+	}
 LEXER_FUNC_END()
 
 LEXER_FUNC_START(Lexer::Ident)
@@ -74,9 +81,11 @@ LEXER_FUNC_START(Lexer::Time)
 	if (auto x = file.Trim("[[:digit:]]{1,2}"))
 		if (file.Trim(':'))
 			if (auto y = file.Trim("[[:digit:]]{2}")) {
-				auto m = static_cast<arg_type>(std::strtoul(x->data(), nullptr, 10));
-				auto s = static_cast<arg_type>(std::strtoul(y->data(), nullptr, 10));
-				return m * 60 + s;
+				arg_type m, s;
+				if (std::from_chars(x->data(), x->data() + x->size(), m, 10).ec == std::errc{} &&
+				    std::from_chars(y->data(), y->data() + y->size(), s, 10).ec == std::errc{} ) {
+					return m * 60 + s;
+				}
 			}
 LEXER_FUNC_END()
 
